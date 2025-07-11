@@ -1,18 +1,15 @@
 {
   "name": "my-tts-app",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.1.0",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "ip": "^2.0.1"
+    "next": "^13.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }

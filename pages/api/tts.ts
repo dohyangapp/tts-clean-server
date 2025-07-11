@@ -1,35 +1,37 @@
-// 파일 위치: my-tts-app/api/tts.ts
-
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+// ✅ pages/api/tts.ts
+import type { NextApiRequest, NextApiResponse } from 'next';
 import textToSpeech from '@google-cloud/text-to-speech';
-import fs from 'fs';
-import util from 'util';
+import path from 'path';
 
-const client = new textToSpeech.TextToSpeechClient();
+const client = new textToSpeech.TextToSpeechClient({
+  keyFilename: path.join(process.cwd(), 'aroma-tts-credentials.json'),
+});
 
-export default async (req: VercelRequest, res: VercelResponse) => {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: '허용되지 않은 메서드입니다' });
+  }
+
+  const { text } = req.body;
+
+  if (!text) {
+    return res.status(400).json({ error: '텍스트가 없습니다' });
+  }
+
   try {
-    const { text } = req.body;
-
-    if (!text) {
-      return res.status(400).json({ error: '텍스트가 제공되지 않았습니다.' });
-    }
-
-    const request = {
+    const [response] = await client.synthesizeSpeech({
       input: { text },
       voice: { languageCode: 'ko-KR', name: 'ko-KR-Neural2-B' },
       audioConfig: { audioEncoding: 'MP3' },
-    };
+    });
 
-    const [response] = await client.synthesizeSpeech(request);
-    const writeFile = util.promisify(fs.writeFile);
-    const fileName = `/tmp/output.mp3`;
-    await writeFile(fileName, response.audioContent, 'binary');
+    const audioBuffer = response.audioContent;
+    if (!audioBuffer) throw new Error('음성 생성 실패');
 
-    const audioBase64 = Buffer.from(response.audioContent!).toString('base64');
-    res.status(200).json({ audioUrl: `data:audio/mp3;base64,${audioBase64}` });
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.send(audioBuffer);
   } catch (error) {
-    console.error('❌ 서버 오류:', error);
+    console.error('❌ TTS 오류:', error);
     res.status(500).json({ error: 'TTS 처리 중 오류 발생' });
   }
-};
+}
