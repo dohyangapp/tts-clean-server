@@ -1,2 +1,15 @@
-aroma-tts-credentials.json.env 
+# 👉 Git에 올리면 안 되는 것들!
+
+# 1. node_modules 폴더 (필수!)
+node_modules/
+
+# 2. 환경 변수나 중요한 파일
+.env
 aroma-tts-credentials.json
+
+# 3. 로그 파일
+*.log
+
+# 4. 빌드된 파일 (선택)
+dist/
+out/
