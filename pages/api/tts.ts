@@ -1,11 +1,6 @@
-// ✅ pages/api/tts.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import textToSpeech from '@google-cloud/text-to-speech';
-import path from 'path';
-
-const client = new textToSpeech.TextToSpeechClient({
-  keyFilename: path.join(process.cwd(), 'aroma-tts-credentials.json'),
-});
+import { GoogleAuth } from 'google-auth-library';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -13,12 +8,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { text } = req.body;
-
   if (!text) {
     return res.status(400).json({ error: '텍스트가 없습니다' });
   }
 
   try {
+    // 🔐 JSON 환경변수에서 인증 정보 읽기
+    const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON || '{}');
+    const client = new textToSpeech.TextToSpeechClient({
+      credentials,
+    });
+
     const [response] = await client.synthesizeSpeech({
       input: { text },
       voice: { languageCode: 'ko-KR', name: 'ko-KR-Neural2-B' },
